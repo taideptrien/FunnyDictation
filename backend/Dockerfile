@@ -1,4 +1,5 @@
-# Use official lightweight Node.js runtime
+# Root level Dockerfile for Render
+# Build for backend located in /backend
 FROM node:20-slim
 
 # Install system tools needed for ffmpeg, Python, and yt-dlp
@@ -25,7 +26,7 @@ RUN npm ci --only=production
 COPY . .
 
 # Expose application port
-EXPOSE 5001
+EXPOSE 10000
 
 # Start the server
-CMD ["node", "server.js"]
+CMD ["node", "backend/server.js"]
