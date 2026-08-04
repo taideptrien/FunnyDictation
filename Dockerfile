@@ -1,8 +1,7 @@
-# Root level Dockerfile for Render
-# Build the backend located in /backend
+# 1. Sử dụng Node 20
 FROM node:20-slim
 
-# Install system tools needed for ffmpeg, Python, and yt-dlp
+# 2. Cài đặt các công cụ hệ thống
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     python3 \
@@ -10,25 +9,26 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install latest yt-dlp from GitHub releases
+# 3. Cài đặt yt-dlp
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
     -o /usr/local/bin/yt-dlp && \
     chmod a+rx /usr/local/bin/yt-dlp
 
-# Set working directory inside container to backend
-WORKDIR /app/backend
+# 4. Đặt thư mục làm việc tại /app (Không đặt vào /app/backend nữa)
+WORKDIR /app
 
-# Copy backend package files and lockfile
+# 5. Copy file package.json từ thư mục backend vào /app
 COPY backend/package*.json ./
 
-# Chỗ này cũ là RUN npm ci ... hãy thay bằng:
+# 6. Cài đặt thư viện (Dùng npm install để tránh lỗi lệch file lock)
 RUN npm install --omit=dev
 
-# Copy source code into container
+# 7. Copy toàn bộ code từ GitHub vào /app
 COPY . .
 
-# Expose application port
+# 8. Render dùng cổng 10000
+ENV PORT=10000
 EXPOSE 10000
 
-# Start the server from backend directory
-CMD ["node", "server.js"]
+# 9. QUAN TRỌNG: Chạy file server.js nằm trong thư mục backend
+CMD ["node", "backend/server.js"]
