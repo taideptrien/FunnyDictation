@@ -480,6 +480,11 @@ app.get(['/api/transcript', '/transcript'], async (req, res) => {
   }
 });
 
+// Root API check
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'FunnyDictation API server' });
+});
+
 // Health check
 app.get(['/api/health', '/health'], (req, res) => {
   res.json({ status: 'ok', message: 'FunnyDictation backend is running!' });

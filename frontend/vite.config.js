@@ -7,8 +7,8 @@ export default defineConfig(({ mode, command }) => {
 
   const apiTarget = env.VITE_API_URL || 'http://localhost:5001';
 
-  // Set base path for GitHub Pages deployment in production build
-  const base = command === 'build' ? '/FunnyDictation/' : '/';
+  // Set base path: process.env.VITE_BASE_PATH (e.g. '/FunnyDictation/' for GitHub Pages), else '/'
+  const base = process.env.VITE_BASE_PATH || '/';
 
   return {
     base,
