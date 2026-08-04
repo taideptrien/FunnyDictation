@@ -4,13 +4,13 @@ import path from 'node:path';
 import axios from 'axios';
 import Groq from 'groq-sdk';
 
-// Danh sách các máy chủ dự phòng để lấy audio (Invidious instances)
-const INVIDIOUS_INSTANCES = [
-  'https://inv.tux.rs',
-  'https://invidious.sethforprivacy.com',
-  'https://invidious.snopyta.org',
-  'https://inv.nadeko.net',
-  'https://invidious.perennialte.ch'
+// Danh sách Piped Instances (Ổn định hơn Invidious)
+const PIPED_INSTANCES = [
+  'https://pipedapi.kavin.rocks',
+  'https://api.piped.victr.me',
+  'https://piped-api.lunar.icu',
+  'https://pipedapi.us.to',
+  'https://pipedapi.at.as64422.net'
 ];
 
 const getGroqKey = () => {
@@ -28,19 +28,27 @@ const getGroqKey = () => {
   return process.env.GROQ_API_KEY || null;
 };
 
-// Hàm mới: Tải audio qua Proxy Invidious (Không cần yt-dlp)
 async function downloadAudio(videoId, outputPath) {
-  for (const instance of INVIDIOUS_INSTANCES) {
+  for (const instance of PIPED_INSTANCES) {
     try {
-      console.log(`[Whisper] Trying proxy: ${instance}`);
-      // Itag 140 là định dạng m4a/aac 128kbps (nhẹ và chuẩn)
-      const audioUrl = `${instance}/latest_version?id=${videoId}&itag=140`;
+      console.log(`[Whisper] Trying Piped instance: ${instance}`);
 
+      // Bước 1: Lấy thông tin stream từ Piped
+      const { data } = await axios.get(`${instance}/streams/${videoId}`, { timeout: 10000 });
+
+      // Bước 2: Tìm link audio (ưu tiên định dạng m4a hoặc opus)
+      const audioStream = data.audioStreams.find(s => s.format === 'M4A' || s.extension === 'm4a') || data.audioStreams[0];
+
+      if (!audioStream || !audioStream.url) continue;
+
+      console.log(`[Whisper] Found audio stream, downloading...`);
+
+      // Bước 3: Tải file về
       const response = await axios({
         method: 'get',
-        url: audioUrl,
+        url: audioStream.url,
         responseType: 'stream',
-        timeout: 15000 // 15 giây
+        timeout: 30000
       });
 
       const writer = fs.createWriteStream(outputPath);
@@ -51,14 +59,14 @@ async function downloadAudio(videoId, outputPath) {
         writer.on('error', reject);
       });
 
-      console.log(`[Whisper] Download successful via ${instance}`);
+      console.log(`[Whisper] Success via ${instance}`);
       return true;
     } catch (err) {
-      console.warn(`[Whisper] Proxy ${instance} failed: ${err.message}`);
-      continue; // Thử máy chủ tiếp theo
+      console.warn(`[Whisper] Instance ${instance} failed: ${err.message}`);
+      continue;
     }
   }
-  throw new Error("All proxies failed. YouTube is blocking the request.");
+  throw new Error("All Piped/Invidious instances are currently blocked or offline.");
 }
 
 export async function transcribeVideo(videoId) {
@@ -70,7 +78,6 @@ export async function transcribeVideo(videoId) {
   const audioPath = path.join(workDir, `${videoId}.m4a`);
 
   try {
-    console.log(`[Whisper] Processing video: ${videoId}`);
     await downloadAudio(videoId, audioPath);
 
     const transcription = await client.audio.transcriptions.create({
