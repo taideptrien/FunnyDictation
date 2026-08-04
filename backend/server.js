@@ -492,8 +492,8 @@ app.get(['/api/health', '/health'], (req, res) => {
 
 // Only start the server when running directly (not in Vercel serverless)
 if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => { // Thêm '0.0.0.0' vào đây
+    console.log(`🚀 Backend server running on http://0.0.0.0:${PORT}`);
   });
 }
 
