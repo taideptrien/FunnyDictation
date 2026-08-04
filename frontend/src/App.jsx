@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// API base URL for backend - falls back to relative '/api' for development
-const API_BASE = import.meta.env.VITE_API_URL || '';
-const API = (path) => `${API_BASE}/api${path}`;
+// API base URL for backend - falls back to relative '/api' for development (proxied by Vite)
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API = (path) => `${API_BASE}/api${path.startsWith('/') ? path : '/' + path}`;
 
 // ============ Utility Functions ============
 

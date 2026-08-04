@@ -61,7 +61,7 @@ async function getVideoMetadata(videoId) {
 }
 
 // Search YouTube videos (requires YOUTUBE_API_KEY in .env)
-app.get('/api/search', async (req, res) => {
+app.get(['/api/search', '/search'], async (req, res) => {
   const { q, maxResults = 10 } = req.query;
 
   if (!q) {
@@ -106,7 +106,7 @@ app.get('/api/search', async (req, res) => {
 });
 
 // Get transcript + metadata for a video (by URL or video ID)
-app.get('/api/transcript', async (req, res) => {
+app.get(['/api/transcript', '/transcript'], async (req, res) => {
   const { url } = req.query;
   const { lang = 'en' } = req.query;
 
@@ -481,7 +481,7 @@ app.get('/api/transcript', async (req, res) => {
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({ status: 'ok', message: 'FunnyDictation backend is running!' });
 });
 
