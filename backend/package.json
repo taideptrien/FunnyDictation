@@ -1,0 +1,20 @@
+{
+  "name": "funnydictation-backend",
+  "version": "1.0.0",
+  "description": "Backend API for FunnyDictation - YouTube-based English dictation practice",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "groq-sdk": "^1.5.0",
+    "youtube-transcript": "^1.2.1",
+    "youtube-transcript-api": "^3.0.6"
+  }
+}
