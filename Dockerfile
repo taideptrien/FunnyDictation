@@ -1,5 +1,5 @@
 # Root level Dockerfile for Render
-# Build for backend located in /backend
+# Build the backend located in /backend
 FROM node:20-slim
 
 # Install system tools needed for ffmpeg, Python, and yt-dlp
@@ -15,18 +15,20 @@ RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
     -o /usr/local/bin/yt-dlp && \
     chmod a+rx /usr/local/bin/yt-dlp
 
-# Set working directory inside container
-WORKDIR /app
+# Set working directory inside container to backend
+WORKDIR /app/backend
 
-# Copy & install dependencies
-COPY package*.json ./
+# Copy backend package files and lockfile
+COPY backend/package*.json ./
+
+# Install production dependencies
 RUN npm ci --only=production
 
-# Copy source code
+# Copy source code into container
 COPY . .
 
 # Expose application port
 EXPOSE 10000
 
-# Start the server
-CMD ["node", "backend/server.js"]
+# Start the server from backend directory
+CMD ["node", "server.js"]
