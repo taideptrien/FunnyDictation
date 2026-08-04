@@ -21,8 +21,8 @@ WORKDIR /app/backend
 # Copy backend package files and lockfile
 COPY backend/package*.json ./
 
-# Install production dependencies
-RUN npm ci --only=production
+# Chỗ này cũ là RUN npm ci ... hãy thay bằng:
+RUN npm install --omit=dev
 
 # Copy source code into container
 COPY . .
