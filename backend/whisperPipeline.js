@@ -1,51 +1,68 @@
-import { Octokit } from '@octokit/rest';
-import fs from 'fs';
-import path from 'path';
-import fetch from 'node-fetch';
-import FormData from 'form-data';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import Groq from 'groq-sdk';
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const accountsJson = process.env.GROQ_ACCOUNTS_JSON
-  ? JSON.parse(process.env.GROQ_ACCOUNTS_JSON)
-  : null;
+const execFileAsync = promisify(execFile);
 
-export async function transcribeVideo(videoId) {
-  if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not defined');
+// Hàm lấy Key thông minh
+const getGroqKey = () => {
+  // 1. Thử lấy từ mảng JSON (ưu tiên)
+  try {
+    const rawJson = process.env.GROQ_ACCOUNTS_JSON;
+    if (rawJson) {
+      const cleanJson = rawJson.startsWith('=') ? rawJson.substring(1) : rawJson;
+      const accounts = JSON.parse(cleanJson);
+      if (Array.isArray(accounts) && accounts.length > 0) {
+        const keys = accounts[0].keys; // Lấy tạm key đầu tiên của gmail_1
+        return keys[Math.floor(Math.random() * keys.length)];
+      }
+    }
+  } catch (e) {
+    console.error("[Whisper] JSON Parse Error:", e.message);
+  }
 
-  const tempDir = path.join('/tmp', 'whisper-pipeline');
-  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+  // 2. Dự phòng: Nếu bạn có dán lẻ 1 key vào biến GROQ_API_KEY
+  return process.env.GROQ_API_KEY || null;
+};
 
-  const audioPath = path.join(tempDir, `${videoId}.mp3`);
-  const ytDlpCommand = `yt-dlp -x --audio-format mp3 -o "${audioPath}" "https://www.youtube.com/watch?v=${videoId}"`;
-  await runCommand(ytDlpCommand);
-
-  const form = new FormData();
-  form.append('audio_file', fs.createReadStream(audioPath));
-
-  const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${GROQ_API_KEY}` },
-    body: form,
-  });
-
-  if (!response.ok) throw new Error(`Groq Whisper API error: ${response.statusText}`);
-  const data = await response.json();
-
-  fs.unlinkSync(audioPath);
-
-  return data.segments.map((seg) => ({
-    start: seg.start_time,
-    end: seg.end_time,
-    text: seg.text.trim(),
-  }));
+async function downloadAudio(videoId, outputDir) {
+  const outputPath = path.join(outputDir, `${videoId}.mp3`);
+  // Dùng yt-dlp với cấu hình siêu nhẹ cho Render Free (512MB RAM)
+  await execFileAsync('yt-dlp', [
+    '-x', '--audio-format', 'mp3',
+    '--format', 'wa',
+    '--socket-timeout', '10',
+    '-o', outputPath,
+    `https://www.youtube.com/watch?v=${videoId}`
+  ]);
+  return outputPath;
 }
 
-async function runCommand(cmd) {
-  const { exec } = await import('child_process');
-  return new Promise((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) return reject(new Error(`exec error: ${stderr || error.message}`));
-      resolve(stdout);
+export async function transcribeVideo(videoId) {
+  const apiKey = getGroqKey();
+  if (!apiKey) throw new Error("No Groq API Key found in Environment Variables");
+
+  const client = new Groq({ apiKey });
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisper-'));
+
+  try {
+    console.log(`[Whisper] Processing video: ${videoId}`);
+    const audioPath = await downloadAudio(videoId, workDir);
+
+    const transcription = await client.audio.transcriptions.create({
+      file: fs.createReadStream(audioPath),
+      model: 'whisper-large-v3',
+      language: 'en',
+      response_format: 'verbose_json',
     });
-  });
+
+    return transcription.segments;
+  } catch (err) {
+    throw new Error(`Whisper Error: ${err.message}`);
+  } finally {
+    if (fs.existsSync(workDir)) fs.rmSync(workDir, { recursive: true, force: true });
+  }
 }
