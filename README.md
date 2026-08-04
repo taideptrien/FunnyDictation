@@ -87,7 +87,34 @@ npm run dev
 
 Mở **http://localhost:3000** 🎉
 
+## 🚀 Deploy lên GitHub
+
+### Frontend — GitHub Pages (tự động)
+
+Frontend được tự động deploy lên GitHub Pages mỗi khi push lên nhánh `main` nhờ GitHub Actions.
+
+1. Mở repo settings → **Pages** → chọn branch `gh-pages`
+2. Mỗi lần push code ở nhánh `main` (thay đổi file trong `frontend/`), Actions sẽ tự động build + deploy
+3. Truy cập: **https://taideptrien.github.io/FunnyDictation/**
+
+### Backend — Render (miễn phí)
+
+Backend cần một server Node.js để chạy. Deploy lên [Render.com](https://render.com) (có free tier):
+
+1. Tạo tài khoản trên [Render](https://render.com)
+2. Click **"New +"** → **"Web Service"** → chọn repo `taideptrien/FunnyDictation`
+3. Chọn thư mục: `backend/`
+4. Build command: `npm install`
+5. Start command: `npm start`
+6. Thêm biến môi trường (từ `.env.example`):
+   - `YOUTUBE_API_KEY`
+   - `GROQ_ACCOUNTS_JSON`
+7. Click **Create Web Service** — backend sẽ deploy tự động!
+
+> **Lưu ý:** Cập nhật `VITE_API_URL` trong frontend `.env` hoặc GitHub repo settings → Secrets → `VITE_API_URL` để trỏ về URL backend của bạn trên Render.
+
 ## 🔐 Bảo mật
+
 
 - **KHÔNG bao giờ** commit `.env` — nó đã được thêm vào `.gitignore`
 - `backend/.env.example` chỉ chứa placeholder (không có key thật)

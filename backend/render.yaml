@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: funnydictation-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: YOUTUBE_API_KEY
+        value: (set in Render dashboard)
+      - key: GROQ_ACCOUNTS_JSON
+        value: (set in Render dashboard)
+    autoDeploy: true
+    plan: free
+    region: oregon
