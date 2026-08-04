@@ -30,14 +30,19 @@ const getGroqKey = () => {
 
 async function downloadAudio(videoId, outputDir) {
   const outputPath = path.join(outputDir, `${videoId}.mp3`);
-  // Dùng yt-dlp với cấu hình siêu nhẹ cho Render Free (512MB RAM)
+
   await execFileAsync('yt-dlp', [
-    '-x', '--audio-format', 'mp3',
-    '--format', 'wa',
-    '--socket-timeout', '10',
+    '-x',
+    '--audio-format', 'mp3',
+    '--format', 'wa',                // Lấy audio bản nhẹ nhất
+    '--no-check-certificates',       // Bỏ qua kiểm tra SSL (giúp vượt rào)
+    '--no-cache-dir',                // Không lưu cache để tránh bị lộ IP cũ
+    '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36', // Giả lập trình duyệt
+    '--extractor-args', 'youtube:player_client=android,web;player_skip=webpage,configs', // Dùng client mobile ít bị chặn hơn
     '-o', outputPath,
     `https://www.youtube.com/watch?v=${videoId}`
   ]);
+
   return outputPath;
 }
 

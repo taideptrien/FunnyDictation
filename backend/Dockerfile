@@ -1,6 +1,20 @@
 # 1. Sử dụng Node 20
 FROM node:20-slim
 
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    python3 \
+    python3-pip \
+    curl \
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Cài đặt Deno (Cực kỳ quan trọng để yt-dlp giải mã YouTube)
+RUN curl -fsSL https://deno.land/x/install/install.sh | sh
+ENV DENO_INSTALL="/root/.deno"
+ENV PATH="$DENO_INSTALL/bin:$PATH"
+
 # 2. Cài đặt các công cụ hệ thống
 RUN apt-get update && apt-get install -y \
     ffmpeg \
