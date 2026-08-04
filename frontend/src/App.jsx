@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+// API base URL for backend - falls back to relative '/api' for development
+const API_BASE = import.meta.env.VITE_API_URL || '';
+const API = (path) => `${API_BASE}/api${path}`;
+
 // ============ Utility Functions ============
 
 // Expand English contractions to their full form for fair comparison
@@ -470,7 +474,7 @@ function App() {
     setSearching(true);
     setSearchError('');
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(API(`/search?q=${encodeURIComponent(searchQuery)}`));
       const data = await res.json();
       if (!res.ok) {
         setSearchError(data.error || 'Search failed');
@@ -497,7 +501,7 @@ function App() {
     setTranscriptError('');
     setUseTTS(false);
     try {
-      const res = await fetch(`/api/transcript?url=${encodeURIComponent(urlOrId)}`);
+      const res = await fetch(API(`/transcript?url=${encodeURIComponent(urlOrId)}`));
       const data = await res.json();
       if (!res.ok) {
         setTranscriptError(data.error || 'Failed to load transcript');

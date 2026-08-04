@@ -1,0 +1,36 @@
+app = "funnydictation-backend"
+
+primary_region = "nrt"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  PORT = "5001"
+
+[services]
+  [[services.ports]]
+    port = 5001
+    handlers = ["http"]
+
+  [[services.http_checks]]
+    interval = 30000
+    timeout = 5000
+    grace_period = "30s"
+    method = "get"
+    path = "/api/health"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 5001
+  auto_start_instances = true
+  auto_stop_instances = true
+  [[services.ports]]
+    port = 5001
+    handlers = ["http"]
+  [[services.http_checks]]
+    interval = 30000
+    timeout = 5000
+    grace_period = "30s"
+    method = "get"
+    path = "/api/health"

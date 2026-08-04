@@ -485,6 +485,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'FunnyDictation backend is running!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-});
+// Only start the server when running directly (not in Vercel serverless)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+  });
+}
+
+// Export app for serverless deployment (Vercel, etc.)
+export { app };
